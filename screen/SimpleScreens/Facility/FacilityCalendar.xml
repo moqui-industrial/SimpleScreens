@@ -30,16 +30,11 @@ along with this software (see the LICENSE.md file). If not, see
     <widgets>
         <render-mode>
             <text type="html,vuet,qvt"><![CDATA[
-                <div id="calendar"></div>
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.1.0/fullcalendar.min.js" type="text/javascript"></script>
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.1.0/locale-all.js" type="text/javascript"></script>
-                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.1.0/fullcalendar.min.css" type="text/css"/>
-                <script>
-    $('#calendar').fullCalendar({ timezone: false, defaultView: 'agendaWeek',
-        header: { left: 'prev,next today', center: 'title', right: 'month,agendaWeek,agendaDay' },
-        eventSources: [ { url: "${sri.buildUrl('getCalendarEvents').url}", type: 'POST', data: { moquiSessionToken:'${ec.web.sessionToken}', facilityId: '${facilityId}' } } ]
-    });
-                </script>
+                <div id="calendar" class="m-fullcalendar"
+                    data-locale="${ec.user.locale.toString()}"
+                    data-events-url="${sri.buildUrl('getCalendarEvents').url}"
+                    data-session-token="${ec.web.sessionToken}"
+                    data-facility-id="${facilityId}"></div>
             ]]></text>
         </render-mode>
     </widgets>

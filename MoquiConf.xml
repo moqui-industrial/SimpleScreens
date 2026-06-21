@@ -13,5 +13,9 @@
                     location="component://SimpleScreens/screen/SimpleScreens.xml"/>
             -->
         </screen>
+        <screen location="component://webroot/screen/webroot/uapps.xml">
+            <subscreens-item name="my" menu-title="My Account" menu-index="90"
+                    location="component://SimpleScreens/screen/MyAccount.xml"/>
+        </screen>
     </screen-facade>
 </moqui-conf>
