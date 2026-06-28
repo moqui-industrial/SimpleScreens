@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Dashboard" default-menu-index="1">
+
+    <parameter name="deviceGroupId" required="true"/>
+    <parameter name="dashboardPath"/>
+    <parameter name="dashboardType"/>
+
+    <actions>
+        <set field="deviceId" from="deviceGroupId"/>
+        <entity-find-one entity-name="moqui.device.DeviceDetail" value-field="deviceGroup">
+            <field-map field-name="deviceId" from="deviceGroupId"/>
+        </entity-find-one>
+        <if condition="deviceGroup == null"><return error="true" message="Device group not found with ID ${deviceGroupId}"/></if>
+
+        <set field="statusFlowId" from="deviceGroup.statusFlowId"/>
+        <set field="statusTypeId" from="deviceGroup.statusTypeId"/>
+        <set field="statusId" from="deviceGroup.statusId"/>
+        <set field="changedEntityName" value="moqui.device.Device"/>
+        <set field="pkPrimaryValue" from="deviceGroupId"/>
+
+        <entity-find entity-name="moqui.device.DeviceDashboard" list="deviceDashboardList">
+            <econdition field-name="deviceId" from="deviceGroupId"/>
+            <econdition field-name="purposeEnumId" value="DdpSummary"/>
+            <order-by field-name="sequenceNum"/>
+        </entity-find>
+        <set field="dashboardPath" from="dashboardPath ?: deviceDashboardList?.getAt(0)?.dashboardPath"/>
+        <set field="dashboardId" from="dashboardPath ? null : deviceDashboardList?.getAt(0)?.dashboardId"/>
+        <set field="dashboardTitle" from="deviceGroup.groupName ?: deviceGroupId"/>
+        <set field="style" from="'display:block; width:100%; min-height:900px; border:none; overflow:hidden; background:#fff;'"/>
+    </actions>
+    <widgets>
+        <container-row><row-col md="6">
+            <container-row>
+                <row-col md="8">
+                    <label text="Device Group: ${deviceGroup.groupName ?: deviceGroupId} [${deviceGroupId}]" type="h4"/>
+                </row-col>
+                <row-col md="4"/>
+            </container-row>
+
+            <form-single name="DeviceGroupOverviewForm" map="deviceGroup" skip-form="true">
+                <field name="statusFlowId"><default-field title="Status Flow">
+                    <display-entity entity-name="moqui.basic.StatusFlow" text="StatusFlowNameTemplate"/>
+                </default-field></field>
+                <field name="statusId"><default-field title="Status">
+                    <display-entity entity-name="moqui.basic.StatusItem"/>
+                </default-field></field>
+                <field name="deviceId"><default-field title="Group ID"><display/></default-field></field>
+                <field name="deviceRuleSetId"><default-field title="Device Rule Set ID"><display/></default-field></field>
+                <field name="deviceRuleSetDisplay" from="deviceRuleSetId"><default-field title="Device Rule Set">
+                    <display-entity entity-name="moqui.device.DeviceRuleSet" text="${ruleSetName ?: deviceRuleSetId}"/>
+                </default-field></field>
+                <field name="groupName"><default-field title="Group Name"><display/></default-field></field>
+                <field name="description"><default-field title="Description"><display/></default-field></field>
+
+                <field-layout>
+                    <field-row><field-ref name="deviceId"/><field-ref name="statusFlowId"/></field-row>
+                    <field-row><field-ref name="statusId"/><field-ref name="deviceRuleSetId"/></field-row>
+                    <field-row><field-ref name="deviceRuleSetDisplay"/></field-row>
+                    <field-row><field-ref name="groupName"/></field-row>
+                    <field-ref name="description"/>
+                </field-layout>
+            </form-single>
+        </row-col><row-col md="6">
+            <section-include name="StatusHistorySection" location="component://SimpleScreens/template/basic/StatusWidgets.xml"/>
+        </row-col></container-row>
+
+        <section name="DashboardByPathSection">
+            <condition><expression>dashboardPath</expression></condition>
+            <widgets>
+                <include-screen location="component://webroot/template/screen/BasicDashboard.xml" share-scope="true"/>
+            </widgets>
+        </section>
+        <section name="DashboardByIdUnavailableSection">
+            <condition><expression>!dashboardPath &amp;&amp; dashboardId</expression></condition>
+            <widgets>
+                <render-mode><text type="html" template="true"><![CDATA[
+                    <div class="alert alert-warning" role="alert">
+                        Device group dashboard mapping found for <strong>${dashboardId?html}</strong>, but this runtime has no active dashboard registry entity.
+                        Pass <code>dashboardPath</code> to embed Grafana directly.
+                    </div>
+                ]]></text></render-mode>
+            </widgets>
+        </section>
+        <section name="DashboardMissingSection">
+            <condition><expression>!dashboardPath &amp;&amp; !dashboardId</expression></condition>
+            <widgets>
+                <render-mode><text type="html" template="true"><![CDATA[
+                    <div class="alert alert-warning" role="alert">
+                        Nessuna dashboard Grafana associata al device group <strong>${(deviceGroup.groupName ?: deviceGroupId)?html}</strong>.
+                    </div>
+                ]]></text></render-mode>
+            </widgets>
+        </section>
+    </widgets>
+</screen>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Process" default-menu-index="2">
+
+    <parameter name="deviceRuleSetId" required="true"/>
+    <parameter name="deviceId"/>
+
+    <transition name="updateDeviceRuleSet">
+        <service-call name="update#moqui.device.DeviceRuleSet" in-map="[deviceRuleSetId:deviceRuleSetId, parentRuleSetId:parentRuleSetId,
+                purposeEnumId:purposeEnumId, sequenceNum:sequenceNum, ruleSetName:ruleSetName, description:description,
+                fromDate:fromDate, thruDate:thruDate]"/>
+        <default-response url="."/>
+    </transition>
+
+    <actions>
+        <entity-find-one entity-name="moqui.device.DeviceRuleSet" value-field="deviceRuleSet"/>
+        <if condition="deviceRuleSet == null"><return error="true" message="DeviceRuleSet not found with ID ${deviceRuleSetId}"/></if>
+    </actions>
+    <widgets>
+        <label text="Device Process ${deviceRuleSet.ruleSetName ?: deviceRuleSetId}" type="h4"/>
+
+        <form-single name="EditDeviceRuleSetForm" transition="updateDeviceRuleSet" map="deviceRuleSet">
+            <field name="deviceRuleSetId"><default-field title="Process ID"><display/></default-field></field>
+            <field name="parentRuleSetId"><default-field title="Parent Process">
+                <drop-down allow-empty="true">
+                    <entity-options key="${deviceRuleSetId}" text="${ruleSetName} [${deviceRuleSetId}]">
+                        <entity-find entity-name="moqui.device.DeviceRuleSet">
+                            <order-by field-name="ruleSetName"/>
+                            <order-by field-name="deviceRuleSetId"/>
+                        </entity-find>
+                    </entity-options>
+                </drop-down>
+            </default-field></field>
+            <field name="purposeEnumId"><default-field title="Purpose">
+                <widget-template-include location="component://webroot/template/screen/BasicWidgetTemplates.xml#enumDropDown">
+                    <set field="enumTypeId" value="DeviceRuleSetPurpose"/>
+                    <set field="allowEmpty" value="true"/>
+                </widget-template-include>
+            </default-field></field>
+            <field name="sequenceNum"><default-field title="Sequence"><text-line size="8"/></default-field></field>
+            <field name="ruleSetName"><default-field title="Process Name"><text-line size="40"/></default-field></field>
+            <field name="description"><default-field title="Description"><text-area rows="6"/></default-field></field>
+            <field name="fromDate"><default-field title="From Date"><date-time/></default-field></field>
+            <field name="thruDate"><default-field title="Thru Date"><date-time/></default-field></field>
+            <field name="submitButton"><default-field title="Update"><submit/></default-field></field>
+
+            <field-layout>
+                <field-row><field-ref name="deviceRuleSetId"/></field-row>
+                <field-row><field-ref name="parentRuleSetId"/><field-ref name="purposeEnumId"/></field-row>
+                <field-row><field-ref name="sequenceNum"/><field-ref name="ruleSetName"/></field-row>
+                <field-row><field-ref name="fromDate"/><field-ref name="thruDate"/></field-row>
+                <field-ref name="description"/>
+                <field-ref name="submitButton"/>
+            </field-layout>
+        </form-single>
+    </widgets>
+</screen>

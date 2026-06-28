@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Dashboard" default-menu-index="1">
+
+    <parameter name="deviceId" required="true"/>
+    <parameter name="dashboardPath"/>
+    <parameter name="dashboardType"/>
+
+    <transition name="updateStatus"><service-call name="update#moqui.device.Device"/><default-response url="."/></transition>
+    <transition name="getDeviceRuleSetList">
+        <actions>
+            <entity-find entity-name="moqui.device.DeviceRuleSet" list="resultList">
+                <date-filter/>
+                <econdition field-name="deviceId"/>
+                <order-by field-name="sequenceNum"/>
+                <order-by field-name="ruleSetName"/>
+            </entity-find>
+            <script><![CDATA[
+                List outList = []
+                resultList.each { ruleSet ->
+                    outList.add([value: ruleSet.deviceRuleSetId, label: "${ruleSet.ruleSetName ?: ruleSet.deviceRuleSetId} [${ruleSet.deviceRuleSetId}]"])
+                }
+                ec.web.sendJsonResponse(outList)
+            ]]></script>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+    <transition name="getDeviceRuleList">
+        <actions>
+            <entity-find entity-name="moqui.device.DeviceRule" list="resultList">
+                <date-filter/>
+                <econdition field-name="deviceRuleSetId" from="selectedDeviceRuleSetId"/>
+                <order-by field-name="priority"/>
+                <order-by field-name="ruleName"/>
+            </entity-find>
+            <script><![CDATA[
+                List outList = []
+                resultList.each { rule ->
+                    String label = "${rule.priority ?: ''} - ${rule.ruleName ?: rule.deviceRuleId} [${rule.deviceRuleId}]"
+                    outList.add([value: rule.deviceRuleId, label: label])
+                }
+                ec.web.sendJsonResponse(outList)
+            ]]></script>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+    <transition name="applyDeviceRule">
+        <actions>
+            <entity-find-one entity-name="moqui.device.DeviceRule" value-field="selectedDeviceRule">
+                <field-map field-name="deviceRuleId" from="selectedDeviceRuleId"/>
+            </entity-find-one>
+            <if condition="selectedDeviceRule == null">
+                <return error="true" message="DeviceRule not found with ID ${selectedDeviceRuleId}"/>
+            </if>
+            <if condition="selectedDeviceRule.deviceRuleSetId != selectedDeviceRuleSetId">
+                <return error="true" message="DeviceRule ${selectedDeviceRuleId} does not belong to DeviceRuleSet ${selectedDeviceRuleSetId}"/>
+            </if>
+
+            <service-call name="moqui.device.DeviceServices.apply#DeviceConfig"
+                    in-map="[deviceConfigId:selectedDeviceRule.deviceConfigId, deviceId:deviceId]"/>
+            <service-call name="update#moqui.device.Device"
+                    in-map="[deviceId:deviceId, deviceRuleSetId:selectedDeviceRuleSetId, deviceRuleId:selectedDeviceRuleId]"/>
+        </actions>
+        <default-response url="."/>
+    </transition>
+
+    <actions>
+        <entity-find-one entity-name="moqui.device.DeviceDetail" value-field="device"/>
+        <if condition="device == null"><return error="true" message="Device not found with ID ${deviceId}"/></if>
+
+        <set field="statusFlowId" from="device.statusFlowId"/>
+        <set field="statusTypeId" from="device.statusTypeId"/>
+        <set field="statusId" from="device.statusId"/>
+        <set field="changedEntityName" value="moqui.device.Device"/>
+        <set field="pkPrimaryValue" from="deviceId"/>
+
+        <entity-find entity-name="moqui.device.DeviceDashboard" list="deviceDashboardList">
+            <econdition field-name="deviceId"/>
+            <econdition field-name="purposeEnumId" value="DdpSummary"/>
+            <order-by field-name="sequenceNum"/>
+        </entity-find>
+        <set field="dashboardPath" from="dashboardPath ?: deviceDashboardList?.getAt(0)?.dashboardPath"/>
+        <set field="dashboardId" from="dashboardPath ? null : deviceDashboardList?.getAt(0)?.dashboardId"/>
+        <set field="dashboardTitle" from="device.deviceName ?: deviceId"/>
+        <set field="style" from="'display:block; width:100%; min-height:900px; border:none; overflow:hidden; background:#fff;'"/>
+    </actions>
+    <widgets>
+        <container-row><row-col md="6">
+            <label text="Device: ${device.deviceName ?: deviceId} [${deviceId}]" type="h4"/>
+
+            <container-row><row-col md="12" style="text-right">
+                <container-dialog id="ApplyDeviceRuleDialog" button-text="Apply Process/Task">
+                    <form-single name="ApplyDeviceRuleForm" transition="applyDeviceRule">
+                        <field name="deviceId"><default-field><hidden/></default-field></field>
+                        <field name="selectedDeviceRuleSetId"><default-field title="Process">
+                            <drop-down allow-empty="true">
+                                <dynamic-options transition="getDeviceRuleSetList" value-field="value" label-field="label"
+                                        server-search="true" min-length="0"/>
+                            </drop-down>
+                        </default-field></field>
+                        <field name="selectedDeviceRuleId"><default-field title="Task">
+                            <drop-down allow-empty="true">
+                                <dynamic-options transition="getDeviceRuleList" value-field="value" label-field="label"
+                                        server-search="true" min-length="0" depends-optional="true">
+                                    <depends-on field="selectedDeviceRuleSetId"/>
+                                </dynamic-options>
+                            </drop-down>
+                        </default-field></field>
+                        <field name="submitButton"><default-field title="Apply"><submit/></default-field></field>
+                    </form-single>
+                </container-dialog>
+            </row-col></container-row>
+
+            <form-single name="DeviceOverviewForm" map="device" skip-form="true">
+                <field name="statusFlowId"><default-field title="Status Flow">
+                    <display-entity entity-name="moqui.basic.StatusFlow" text="StatusFlowNameTemplate"/>
+                </default-field></field>
+                <field name="deviceId"><default-field title="Device ID"><display/></default-field></field>
+                <field name="deviceRuleSetId"><default-field title="Device Rule Set ID"><display/></default-field></field>
+                <field name="deviceRuleSetDisplay" from="deviceRuleSetId"><default-field title="Device Rule Set">
+                    <display-entity entity-name="moqui.device.DeviceRuleSet" text="${ruleSetName ?: deviceRuleSetId}"/>
+                </default-field></field>
+                <field name="deviceName"><default-field title="Name"><display/></default-field></field>
+                <field name="description"><default-field title="Description"><display/></default-field></field>
+
+                <field-layout>
+                    <field-row><field-ref name="deviceId"/><field-ref name="statusFlowId"/></field-row>
+                    <field-row><field-ref name="deviceRuleSetId"/><field-ref name="deviceRuleSetDisplay"/></field-row>
+                    <field-row><field-ref name="deviceName"/></field-row>
+                    <field-ref name="description"/>
+                </field-layout>
+            </form-single>
+        </row-col><row-col md="6">
+            <section-include name="StatusChangeSection" location="component://SimpleScreens/template/basic/StatusWidgets.xml"/>
+            <section-include name="StatusHistorySection" location="component://SimpleScreens/template/basic/StatusWidgets.xml"/>
+        </row-col></container-row>
+
+        <section name="DashboardByPathSection">
+            <condition><expression>dashboardPath</expression></condition>
+            <widgets>
+                <include-screen location="component://webroot/template/screen/BasicDashboard.xml" share-scope="true"/>
+            </widgets>
+        </section>
+        <section name="DashboardByIdUnavailableSection">
+            <condition><expression>!dashboardPath &amp;&amp; dashboardId</expression></condition>
+            <widgets>
+                <render-mode><text type="html" template="true"><![CDATA[
+                    <div class="alert alert-warning" role="alert">
+                        Device dashboard mapping found for <strong>${dashboardId?html}</strong>, but this runtime has no active dashboard registry entity.
+                        Pass <code>dashboardPath</code> to embed Grafana directly.
+                    </div>
+                ]]></text></render-mode>
+            </widgets>
+        </section>
+        <section name="DashboardMissingSection">
+            <condition><expression>!dashboardPath &amp;&amp; !dashboardId</expression></condition>
+            <widgets>
+                <render-mode><text type="html" template="true"><![CDATA[
+                    <div class="alert alert-warning" role="alert">
+                        Nessuna dashboard Grafana associata al device <strong>${(device.deviceName ?: deviceId)?html}</strong>.
+                    </div>
+                ]]></text></render-mode>
+            </widgets>
+        </section>
+    </widgets>
+</screen>

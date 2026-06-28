@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Parameters" default-menu-index="2">
+
+    <parameter name="deviceConfigId" required="true"/>
+
+    <transition name="updateParameter">
+        <service-call name="update#moqui.math.Parameter"/>
+        <default-response url="."/>
+    </transition>
+
+    <actions>
+        <entity-find-one entity-name="moqui.device.DeviceConfig" value-field="deviceConfig">
+            <field-map field-name="deviceConfigId"/>
+        </entity-find-one>
+        <if condition="deviceConfig == null"><return error="true" message="DeviceConfig not found with ID ${deviceConfigId}"/></if>
+    </actions>
+    <widgets>
+        <form-list name="DeviceConfigParameterList" list="parameterList" transition="updateParameter" header-dialog="true"
+                saved-finds="true" select-columns="true" show-page-size="true"
+                show-csv-button="true" show-pdf-button="true" show-all-button="true">
+            <entity-find entity-name="moqui.math.ParameterDetail" list="parameterList" cache="true">
+                <econdition field-name="deviceConfigId"/>
+                <econdition field-name="deviceId" operator="is-null"/>
+                <search-form-inputs default-order-by="sequenceNum,parameterCode,parameterId"/>
+            </entity-find>
+
+            <field name="parameterId"><default-field><hidden/></default-field></field>
+            <field name="deviceConfigId"><default-field><hidden/></default-field></field>
+            <field name="parameterDefId">
+                <header-field title="Parameter Def" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="parameterIdDisplay">
+                <header-field title="Parameter ID"><display/></header-field>
+                <default-field title="Parameter ID"><display text="${parameterId}"/></default-field>
+            </field>
+            <field name="parameterCode">
+                <header-field title="Code" show-order-by="case-insensitive"><text-find size="20" default-operator="begins"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="parameterName">
+                <header-field title="Name" show-order-by="case-insensitive"><text-find size="30" default-operator="contains"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="description">
+                <header-field title="Description"><text-find size="30" default-operator="contains"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="sequenceNum">
+                <header-field title="Sequence" show-order-by="true"><range-find/></header-field>
+                <default-field><text-line size="6"/></default-field>
+            </field>
+            <field name="numericValue">
+                <header-field title="Numeric" show-order-by="true"><range-find/></header-field>
+                <default-field><text-line size="14"/></default-field>
+            </field>
+            <field name="symbolicValue">
+                <header-field title="Symbolic" show-order-by="case-insensitive"><text-find size="18" default-operator="contains"/></header-field>
+                <default-field><text-line size="24"/></default-field>
+            </field>
+            <field name="parameterEnumId">
+                <header-field title="Enum Value" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><text-line size="24"/></default-field>
+            </field>
+            <field name="submitButton">
+                <header-field title="Find"><submit/></header-field>
+                <default-field title="Update"><submit/></default-field>
+            </field>
+        </form-list>
+    </widgets>
+</screen>
