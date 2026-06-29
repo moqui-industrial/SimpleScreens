@@ -6,14 +6,13 @@ Grant of Patent License.
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         default-menu-title="Members" default-menu-index="2">
 
-    <parameter name="deviceGroupId" required="true"/>
+    <parameter name="deviceId" required="true"/>
 
     <actions>
-        <set field="deviceId" from="deviceGroupId"/>
         <entity-find-one entity-name="moqui.device.DeviceGroup" value-field="deviceGroup">
-            <field-map field-name="deviceId" from="deviceGroupId"/>
+            <field-map field-name="deviceId" from="deviceId"/>
         </entity-find-one>
-        <if condition="deviceGroup == null"><return error="true" message="Device group not found with ID ${deviceGroupId}"/></if>
+        <if condition="deviceGroup == null"><return error="true" message="Device group not found with ID ${deviceId}"/></if>
     </actions>
     <widgets>
         <form-list name="DeviceGroupMemberListForm" list="deviceGroupMemberList" skip-form="true"

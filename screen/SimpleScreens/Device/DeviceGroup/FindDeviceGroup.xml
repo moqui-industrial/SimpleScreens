@@ -21,11 +21,11 @@ Grant of Patent License.
 
             <field name="deviceId">
                 <header-field title="ID" show-order-by="true"><text-find size="16" default-operator="begins"/></header-field>
-                <default-field><link url="editDeviceGroup" text="${deviceId}" parameter-map="[deviceGroupId:deviceId]" link-type="anchor"/></default-field>
+                <default-field><link url="editDeviceGroup" text="${deviceId}" parameter-map="[deviceId:deviceId]" link-type="anchor"/></default-field>
             </field>
             <field name="groupName">
                 <header-field title="Group Name" show-order-by="case-insensitive"><text-find size="30"/></header-field>
-                <default-field><link url="editDeviceGroup" text="${groupName ?: deviceId}" parameter-map="[deviceGroupId:deviceId]" link-type="anchor"/></default-field>
+                <default-field><link url="editDeviceGroup" text="${groupName ?: deviceId}" parameter-map="[deviceId:deviceId]" link-type="anchor"/></default-field>
             </field>
             <field name="parentDeviceId">
                 <header-field title="Parent" show-order-by="true"><text-find size="16" default-operator="begins"/></header-field>
@@ -74,12 +74,12 @@ Grant of Patent License.
                 <default-field><display-entity entity-name="moqui.basic.StatusItem"/></default-field>
             </field>
             <field name="deviceRuleSetId">
-                <header-field title="Rule Set ID" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <header-field title="Process ID" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
                 <default-field><display/></default-field>
             </field>
             <field name="deviceRuleSetDisplay" from="deviceRuleSetId">
-                <header-field title="Rule Set"><display/></header-field>
-                <default-field title="Rule Set">
+                <header-field title="Process"><display/></header-field>
+                <default-field title="Process">
                     <display-entity entity-name="moqui.device.DeviceRuleSet" text="${ruleSetName ?: deviceRuleSetId}"/>
                 </default-field>
             </field>

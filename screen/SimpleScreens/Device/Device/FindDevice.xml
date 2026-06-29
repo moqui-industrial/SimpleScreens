@@ -92,6 +92,16 @@ along with this software (see the LICENSE.md file). If not, see
                     <display-entity entity-name="moqui.device.DeviceRuleSet" text="${ruleSetName ?: deviceRuleSetId}"/>
                 </default-field>
             </field>
+            <field name="deviceRuleId">
+                <header-field title="Rule ID" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="deviceRuleDisplay" from="deviceRuleId">
+                <header-field title="Rule"><display/></header-field>
+                <default-field title="Rule">
+                    <display-entity entity-name="moqui.device.DeviceRule" text="${ruleName ?: deviceRuleId}"/>
+                </default-field>
+            </field>
             <field name="configId">
                 <header-field title="Config" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
                 <default-field><display/></default-field>
@@ -183,6 +193,7 @@ along with this software (see the LICENSE.md file). If not, see
             <form-list-column><field-ref name="controlMethodEnumId"/><field-ref name="operatingModeEnumId"/></form-list-column>
             <form-list-column><field-ref name="statusTypeId"/><field-ref name="statusFlowId"/><field-ref name="statusId"/></form-list-column>
             <form-list-column><field-ref name="deviceRuleSetId"/><field-ref name="deviceRuleSetDisplay"/></form-list-column>
+            <form-list-column><field-ref name="deviceRuleId"/><field-ref name="deviceRuleDisplay"/></form-list-column>
             <form-list-column><field-ref name="configId"/><field-ref name="coordinateSystemId"/></form-list-column>
             <form-list-column><field-ref name="transformationId"/><field-ref name="approximatedFunctionId"/></form-list-column>
             <form-list-column><field-ref name="serialNumber"/><field-ref name="uuid"/><field-ref name="hash"/></form-list-column>

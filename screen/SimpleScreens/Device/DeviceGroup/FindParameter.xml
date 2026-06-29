@@ -6,7 +6,7 @@ Grant of Patent License.
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
         default-menu-title="Parameters" default-menu-index="3">
 
-    <parameter name="deviceGroupId" required="true"/>
+    <parameter name="deviceId" required="true"/>
 
     <transition name="updateParameter">
         <service-call name="update#moqui.math.Parameter"/>
@@ -14,9 +14,8 @@ Grant of Patent License.
     </transition>
 
     <actions>
-        <set field="deviceId" from="deviceGroupId"/>
         <entity-find-one entity-name="moqui.device.DeviceDetail" value-field="deviceGroup"/>
-        <if condition="deviceGroup == null"><return error="true" message="Device group not found with ID ${deviceGroupId}"/></if>
+        <if condition="deviceGroup == null"><return error="true" message="Device group not found with ID ${deviceId}"/></if>
     </actions>
     <widgets>
         <form-list name="DeviceGroupParameterList" list="parameterList" transition="updateParameter" header-dialog="true"
