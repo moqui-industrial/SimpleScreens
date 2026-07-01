@@ -92,6 +92,15 @@ Grant of Patent License.
     <transition name="createContent"><service-call name="moqui.device.DeviceServices.create#DeviceContent"/><default-response url="."><parameter name="deviceId"/></default-response></transition>
     <transition name="updateContent"><service-call name="moqui.device.DeviceServices.update#DeviceContent"/><default-response url="."><parameter name="deviceId"/></default-response></transition>
     <transition name="deleteContent"><service-call name="delete#moqui.device.DeviceContent"/><default-response url="."><parameter name="deviceId"/></default-response></transition>
+    <transition name="transferContent">
+        <parameter name="deviceContentId" required="true"/>
+        <parameter name="requestName" required="true"/>
+        <actions>
+            <service-call name="moqui.device.DeviceGatewayServices.transfer#DeviceContent"
+                    in-map="[deviceContentId:deviceContentId, requestName:requestName]"/>
+        </actions>
+        <default-response url="."><parameter name="deviceId"/></default-response>
+    </transition>
     <transition name="downloadContent" read-only="true">
         <parameter name="deviceContentId"/>
         <actions>
@@ -171,6 +180,10 @@ Grant of Patent License.
             </entity-find-one>
             <entity-find-one entity-name="moqui.device.DeviceRequest" value-field="syncParametersRequest">
                 <field-map field-name="requestName" from="syncParametersRequestName"/>
+            </entity-find-one>
+            <set field="transferContentRequestName" from="deviceId + '_TransferContent'"/>
+            <entity-find-one entity-name="moqui.device.DeviceRequest" value-field="transferContentRequest">
+                <field-map field-name="requestName" from="transferContentRequestName"/>
             </entity-find-one>
         </if>
     </actions>
@@ -289,6 +302,9 @@ Grant of Patent License.
                             <link url="downloadContent" condition="content.contentLocation"
                                     parameter-map="[deviceContentId:content.deviceContentId]"
                                     text="Download ${content.contentLocation.substring(content.contentLocation.lastIndexOf('/') + 1)}"/>
+                            <link text="Transfer Content" url="transferContent" condition="transferContentRequest != null"
+                                    parameter-map="[deviceContentId:content.deviceContentId, deviceId:deviceId, requestName:transferContentRequestName]"
+                                    confirmation="Transfer content ${contentTypeEnum?.description ?: content.deviceContentId}?"/>
                             <container-dialog id="UpdateContentContainer${content_index}" button-text="Edit Content">
                                 <form-single name="UpdateContentForm" transition="updateContent" map="content">
                                     <field name="deviceContentId"><default-field><hidden/></default-field></field>
