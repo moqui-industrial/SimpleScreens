@@ -72,15 +72,17 @@ Grant of Patent License.
     </transition>
     <transition name="downloadProcess">
         <parameter name="deviceId" required="true"/>
+        <parameter name="controllerDeviceId" required="true"/>
         <parameter name="requestName" required="true"/>
         <parameter name="deviceRuleSetId" required="true"/>
         <actions>
             <service-call name="moqui.device.DeviceGatewayServices.export#DeviceConfig"
-                    in-map="[deviceRuleSetId:deviceRuleSetId, deviceId:deviceId, requestName:requestName]"/>
+                    in-map="[deviceRuleSetId:deviceRuleSetId, requestName:requestName]"/>
         </actions>
         <default-response url="."><parameter name="deviceId"/></default-response>
     </transition>
     <transition name="syncParameters">
+        <parameter name="deviceId" required="true"/>
         <parameter name="requestName" required="true"/>
         <actions>
             <service-call name="moqui.device.DeviceServices.run#DeviceRequest" in-map="[requestName:requestName]"/>
@@ -221,13 +223,15 @@ Grant of Patent License.
             <container style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end; margin-bottom:12px;">
                 <section name="DownloadProcessSection"><condition><expression>controllerPhysicalDeviceId &amp;&amp; downloadProcessRequest != null &amp;&amp; deviceGroup.deviceRuleSetId</expression></condition><widgets>
                     <link url="downloadProcess" url-type="transition" link-type="hidden-form" text="Download Process">
-                        <parameter name="deviceId" from="controllerPhysicalDeviceId"/>
+                        <parameter name="deviceId" from="deviceId"/>
+                        <parameter name="controllerDeviceId" from="controllerPhysicalDeviceId"/>
                         <parameter name="deviceRuleSetId" from="deviceGroup.deviceRuleSetId"/>
                         <parameter name="requestName" from="downloadProcessRequestName"/>
                     </link>
                 </widgets></section>
                 <section name="SyncParametersSection"><condition><expression>controllerPhysicalDeviceId &amp;&amp; syncParametersRequest != null</expression></condition><widgets>
                     <link url="syncParameters" url-type="transition" link-type="hidden-form" text="Sync Parameters">
+                        <parameter name="deviceId" from="deviceId"/>
                         <parameter name="requestName" from="syncParametersRequestName"/>
                     </link>
                 </widgets></section>
