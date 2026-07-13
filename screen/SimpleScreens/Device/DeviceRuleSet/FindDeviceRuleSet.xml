@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Find Processes" default-menu-index="1" default-menu-include="false">
+
+    <parameter name="deviceId"/>
+
+    <transition name="findDeviceRuleSet"><default-response url="."/></transition>
+    <transition name="editDeviceRuleSet"><default-response url="../EditDeviceRuleSet"/></transition>
+    <transition name="createDeviceRuleSet">
+        <service-call name="create#moqui.device.DeviceRuleSet" in-map="[parentRuleSetId:parentRuleSetId, purposeEnumId:purposeEnumId,
+                sequenceNum:sequenceNum, ruleSetName:ruleSetName, description:description, fromDate:fromDate, thruDate:thruDate]"/>
+        <default-response url="../EditDeviceRuleSet" parameter-map="ec.web.requestParameters + [deviceRuleSetId:deviceRuleSetId, deviceId:deviceId]"/>
+    </transition>
+
+    <actions>
+        <if condition="deviceId">
+            <entity-find-one entity-name="moqui.device.DeviceDetail" value-field="device"/>
+            <if condition="device == null"><return error="true" message="Device not found with ID ${deviceId}"/></if>
+        </if>
+    </actions>
+    <widgets>
+        <container-row>
+            <row-col md="8">
+                <label text="${device ? 'Device Processes for ' + (device.deviceName ?: deviceId) : 'Device Processes'}" type="h4"/>
+            </row-col>
+        </container-row>
+
+        <container-dialog id="NewDeviceRuleSetContainer" button-text="New Process">
+            <form-single name="NewDeviceRuleSetForm" transition="createDeviceRuleSet">
+                <field name="parentRuleSetId"><default-field title="Parent Process">
+                    <drop-down allow-empty="true">
+                        <entity-options key="${deviceRuleSetId}" text="${ruleSetName} [${deviceRuleSetId}]">
+                            <entity-find entity-name="moqui.device.DeviceRuleSet">
+                                <order-by field-name="ruleSetName"/>
+                                <order-by field-name="deviceRuleSetId"/>
+                            </entity-find>
+                        </entity-options>
+                    </drop-down>
+                </default-field></field>
+                <field name="purposeEnumId"><default-field title="Purpose">
+                    <widget-template-include location="component://webroot/template/screen/BasicWidgetTemplates.xml#enumDropDown">
+                        <set field="enumTypeId" value="DeviceRuleSetPurpose"/>
+                        <set field="allowEmpty" value="true"/>
+                    </widget-template-include>
+                </default-field></field>
+                <field name="sequenceNum"><default-field title="Sequence"><text-line size="8"/></default-field></field>
+                <field name="ruleSetName"><default-field title="Process Name"><text-line size="40"/></default-field></field>
+                <field name="description"><default-field title="Description"><text-area rows="6"/></default-field></field>
+                <field name="fromDate"><default-field title="From Date"><date-time/></default-field></field>
+                <field name="thruDate"><default-field title="Thru Date"><date-time/></default-field></field>
+                <field name="submitButton"><default-field title="Create"><submit/></default-field></field>
+            </form-single>
+        </container-dialog>
+
+        <form-list name="DeviceRuleSetList" list="deviceRuleSetList" skip-form="true" header-dialog="true"
+                saved-finds="true" select-columns="true" show-page-size="true">
+            <entity-find entity-name="moqui.device.DeviceRuleSet" list="deviceRuleSetList">
+                <date-filter/>
+                <search-form-inputs default-order-by="sequenceNum,ruleSetName,deviceRuleSetId"/>
+            </entity-find>
+
+            <field name="deviceRuleSetId">
+                <header-field title="Process ID" show-order-by="true"><text-find size="12" default-operator="begins"/></header-field>
+                <default-field>
+                    <link url="editDeviceRuleSet" text="${deviceRuleSetId}" link-type="anchor">
+                        <parameter name="deviceId" from="deviceId" condition="deviceId"/>
+                    </link>
+                </default-field>
+            </field>
+            <field name="ruleSetName">
+                <header-field title="Process Name" show-order-by="case-insensitive"><text-find size="30" default-operator="contains"/></header-field>
+                <default-field>
+                    <link url="editDeviceRuleSet" text="${ruleSetName}" link-type="anchor">
+                        <parameter name="deviceId" from="deviceId" condition="deviceId"/>
+                    </link>
+                </default-field>
+            </field>
+            <field name="parentRuleSetId">
+                <header-field title="Parent Process" show-order-by="true"><text-find size="16" default-operator="begins"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="purposeEnumId">
+                <header-field title="Purpose" show-order-by="true">
+                    <widget-template-include location="component://webroot/template/screen/BasicWidgetTemplates.xml#enumDropDown">
+                        <set field="enumTypeId" value="DeviceRuleSetPurpose"/>
+                        <set field="allowEmpty" value="true"/>
+                        <set field="allowMultiple" value="true"/>
+                    </widget-template-include>
+                </header-field>
+                <default-field><display-entity entity-name="moqui.basic.Enumeration"/></default-field>
+            </field>
+            <field name="sequenceNum">
+                <header-field title="Sequence" show-order-by="true"><range-find size="8"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="fromDate">
+                <header-field title="From Date" show-order-by="true"><date-period allow-empty="true"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="thruDate">
+                <header-field title="Thru Date" show-order-by="true"><date-period allow-empty="true"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="description">
+                <header-field title="Description"><text-find size="30" default-operator="contains"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="submitButton"><header-field title="Find"><submit/></header-field></field>
+        </form-list>
+    </widgets>
+</screen>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Dashboard" default-menu-index="1">
+
+    <parameter name="deviceConfigId" required="true"/>
+    <transition name="getTrajectoryList">
+        <actions>
+            <entity-find entity-name="moqui.math.Trajectory" list="resultList">
+                <search-form-inputs skip-fields="moquiSessionToken"/>
+                <order-by field-name="approximatedFunctionId"/>
+            </entity-find>
+            <script><![CDATA[
+                List outList = []
+                resultList.each { trajectory ->
+                    String trajectoryId = trajectory.approximatedFunctionId
+                    outList.add([value: trajectoryId, label: trajectoryId])
+                }
+                ec.web.sendJsonResponse(outList)
+            ]]></script>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+    <transition name="updateDeviceConfig"><service-call name="update#moqui.device.DeviceConfig"/><default-response url="."/></transition>
+    <actions>
+        <entity-find-one entity-name="moqui.device.DeviceConfig" value-field="deviceConfig">
+            <field-map field-name="deviceConfigId"/>
+        </entity-find-one>
+        <if condition="deviceConfig == null"><return error="true" message="DeviceConfig not found with ID ${deviceConfigId}"/></if>
+    </actions>
+    <widgets>
+        <label text="Device Config: ${deviceConfig.configName ?: deviceConfigId} [${deviceConfigId}]" type="h4"/>
+
+        <form-single name="DeviceConfigDetailForm" map="deviceConfig" transition="updateDeviceConfig">
+            <field name="deviceConfigId"><default-field title="Config ID"><display/></default-field></field>
+            <field name="parentConfigId"><default-field title="Parent Config"><display/></default-field></field>
+            <field name="configTypeEnumId"><default-field title="Config Type"><display-entity entity-name="moqui.basic.Enumeration"/></default-field></field>
+            <field name="purposeEnumId"><default-field title="Purpose"><display-entity entity-name="moqui.basic.Enumeration"/></default-field></field>
+            <field name="deviceTypeEnumId"><default-field title="Device Type"><display-entity entity-name="moqui.basic.Enumeration"/></default-field></field>
+            <field name="controlMethodEnumId"><default-field title="Control Method">
+                <widget-template-include location="component://webroot/template/screen/BasicWidgetTemplates.xml#enumDropDown">
+                    <set field="enumTypeId" value="DeviceControlMethod"/>
+                    <set field="allowEmpty" value="true"/>
+                </widget-template-include>
+            </default-field></field>
+            <field name="approximatedFunctionId"><default-field title="Trajectory">
+                <drop-down allow-empty="true">
+                    <dynamic-options transition="getTrajectoryList" value-field="value" label-field="label"
+                            server-search="true" min-length="0"/>
+                </drop-down>
+            </default-field></field>
+            <field name="configName"><default-field title="Config Name"><display/></default-field></field>
+            <field name="description"><default-field title="Description"><display/></default-field></field>
+            <field name="fromDate"><default-field title="From Date"><date-time type="date-time"/></default-field></field>
+            <field name="thruDate"><default-field title="Thru Date"><date-time type="date-time"/></default-field></field>
+            <field name="submitButton"><default-field title="Update"><submit/></default-field></field>
+
+            <field-layout>
+                <field-row><field-ref name="deviceConfigId"/><field-ref name="parentConfigId"/></field-row>
+                <field-row><field-ref name="configTypeEnumId"/><field-ref name="purposeEnumId"/></field-row>
+                <field-row><field-ref name="deviceTypeEnumId"/><field-ref name="controlMethodEnumId"/></field-row>
+                <field-row><field-ref name="approximatedFunctionId"/><field-ref name="fromDate"/></field-row>
+                <field-row><field-ref name="configName"/><field-ref name="thruDate"/></field-row>
+                <field-ref name="description"/>
+                <field-ref name="submitButton"/>
+            </field-layout>
+        </form-single>
+    </widgets>
+</screen>

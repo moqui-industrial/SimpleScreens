@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-include="false">
+
+    <transition name="editDeviceConfig"><default-response url="../EditDeviceConfig"/></transition>
+
+    <widgets>
+        <form-list name="ListDeviceConfigs" list="deviceConfigList" skip-form="true" header-dialog="true"
+                saved-finds="true" select-columns="true" show-page-size="true">
+            <entity-find entity-name="moqui.device.DeviceConfig" list="deviceConfigList" distinct="true">
+                <date-filter/>
+                <search-form-inputs default-order-by="configName,deviceConfigId"/>
+            </entity-find>
+
+            <field name="deviceConfigId">
+                <header-field title="ID" show-order-by="true"><text-find size="16" default-operator="begins"/></header-field>
+                <default-field><link url="editDeviceConfig" text="${deviceConfigId}" link-type="anchor"/></default-field>
+            </field>
+            <field name="configName">
+                <header-field title="Config Name" show-order-by="case-insensitive"><text-find size="30"/></header-field>
+                <default-field><link url="editDeviceConfig" text="${configName ?: deviceConfigId}" link-type="anchor"/></default-field>
+            </field>
+            <field name="parentConfigId">
+                <header-field title="Parent" show-order-by="true"><text-find size="16" default-operator="begins"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="configTypeEnumId">
+                <header-field title="Type" show-order-by="true">
+                    <widget-template-include location="component://webroot/template/screen/BasicWidgetTemplates.xml#enumDropDown">
+                        <set field="enumTypeId" value="DeviceConfigType"/>
+                        <set field="allowEmpty" value="true"/>
+                        <set field="allowMultiple" value="true"/>
+                        <set field="style" value=" "/>
+                    </widget-template-include>
+                </header-field>
+                <default-field><display-entity entity-name="moqui.basic.Enumeration"/></default-field>
+            </field>
+            <field name="purposeEnumId">
+                <header-field title="Purpose" show-order-by="true">
+                    <widget-template-include location="component://webroot/template/screen/BasicWidgetTemplates.xml#enumDropDown">
+                        <set field="enumTypeId" value="DeviceConfigPurpose"/>
+                        <set field="allowEmpty" value="true"/>
+                        <set field="allowMultiple" value="true"/>
+                        <set field="style" value=" "/>
+                    </widget-template-include>
+                </header-field>
+                <default-field><display-entity entity-name="moqui.basic.Enumeration"/></default-field>
+            </field>
+            <field name="deviceTypeEnumId">
+                <header-field title="Device Type" show-order-by="true">
+                    <widget-template-include location="component://webroot/template/screen/BasicWidgetTemplates.xml#enumDropDown">
+                        <set field="enumTypeId" value="DeviceType"/>
+                        <set field="allowEmpty" value="true"/>
+                        <set field="allowMultiple" value="true"/>
+                        <set field="style" value=" "/>
+                    </widget-template-include>
+                </header-field>
+                <default-field><display-entity entity-name="moqui.basic.Enumeration"/></default-field>
+            </field>
+            <field name="controlMethodEnumId">
+                <header-field title="Control Method" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><display-entity entity-name="moqui.basic.Enumeration"/></default-field>
+            </field>
+            <field name="approximatedFunctionId">
+                <header-field title="Trajectory" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="fromDate">
+                <header-field title="From Date" show-order-by="true"><date-period allow-empty="true"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="thruDate">
+                <header-field title="Thru Date" show-order-by="true"><date-period allow-empty="true"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="description">
+                <header-field title="Description"><text-find size="30"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="submitButton"><header-field title="Find"><submit/></header-field></field>
+        </form-list>
+    </widgets>
+</screen>

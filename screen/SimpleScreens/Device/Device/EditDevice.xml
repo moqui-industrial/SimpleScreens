@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Dashboard" default-menu-index="1">
+
+    <parameter name="deviceId" required="true"/>
+    <parameter name="dashboardPath"/>
+    <parameter name="dashboardType"/>
+
+    <transition name="updateStatus"><service-call name="update#moqui.device.Device"/><default-response url="."><parameter name="deviceId"/></default-response></transition>
+    <transition name="getDeviceRuleSetList">
+        <actions>
+            <entity-find entity-name="moqui.device.DeviceRuleSet" list="resultList">
+                <date-filter/>
+                <econdition field-name="deviceId"/>
+                <order-by field-name="sequenceNum"/>
+                <order-by field-name="ruleSetName"/>
+            </entity-find>
+            <script><![CDATA[
+                List outList = []
+                resultList.each { ruleSet ->
+                    outList.add([value: ruleSet.deviceRuleSetId, label: "${ruleSet.ruleSetName ?: ruleSet.deviceRuleSetId} [${ruleSet.deviceRuleSetId}]"])
+                }
+                ec.web.sendJsonResponse(outList)
+            ]]></script>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+    <transition name="getDeviceRuleList">
+        <actions>
+            <entity-find entity-name="moqui.device.DeviceRule" list="resultList">
+                <date-filter/>
+                <econdition field-name="deviceRuleSetId" from="selectedDeviceRuleSetId"/>
+                <order-by field-name="priority"/>
+                <order-by field-name="ruleName"/>
+            </entity-find>
+            <script><![CDATA[
+                List outList = []
+                resultList.each { rule ->
+                    String label = "${rule.priority ?: ''} - ${rule.ruleName ?: rule.deviceRuleId} [${rule.deviceRuleId}]"
+                    outList.add([value: rule.deviceRuleId, label: label])
+                }
+                ec.web.sendJsonResponse(outList)
+            ]]></script>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+    <transition name="applyDeviceRule">
+        <actions>
+            <entity-find-one entity-name="moqui.device.DeviceRule" value-field="selectedDeviceRule">
+                <field-map field-name="deviceRuleId" from="selectedDeviceRuleId"/>
+            </entity-find-one>
+            <if condition="selectedDeviceRule == null">
+                <return error="true" message="DeviceRule not found with ID ${selectedDeviceRuleId}"/>
+            </if>
+            <if condition="selectedDeviceRule.deviceRuleSetId != selectedDeviceRuleSetId">
+                <return error="true" message="DeviceRule ${selectedDeviceRuleId} does not belong to DeviceRuleSet ${selectedDeviceRuleSetId}"/>
+            </if>
+
+            <service-call name="moqui.device.DeviceServices.apply#DeviceConfig"
+                    in-map="[deviceConfigId:selectedDeviceRule.deviceConfigId, deviceId:deviceId]"/>
+            <service-call name="update#moqui.device.Device"
+                    in-map="[deviceId:deviceId, deviceRuleSetId:selectedDeviceRuleSetId, deviceRuleId:selectedDeviceRuleId]"/>
+        </actions>
+        <default-response url="."><parameter name="deviceId"/></default-response>
+    </transition>
+    <transition name="downloadProcess">
+        <parameter name="requestName" required="true"/>
+        <parameter name="deviceRuleSetId" required="true"/>
+        <actions>
+            <service-call name="moqui.device.DeviceGatewayServices.export#DeviceConfig"
+                    in-map="[deviceRuleSetId:deviceRuleSetId, deviceId:deviceId, requestName:requestName]"/>
+        </actions>
+        <default-response url="."><parameter name="deviceId"/></default-response>
+    </transition>
+    <transition name="syncParameters">
+        <parameter name="requestName" required="true"/>
+        <actions>
+            <service-call name="moqui.device.DeviceServices.run#DeviceRequest" in-map="[requestName:requestName]"/>
+        </actions>
+        <default-response url="."><parameter name="deviceId"/></default-response>
+    </transition>
+    <transition name="createContent"><service-call name="moqui.device.DeviceServices.create#DeviceContent"/><default-response url="."><parameter name="deviceId"/></default-response></transition>
+    <transition name="updateContent"><service-call name="moqui.device.DeviceServices.update#DeviceContent"/><default-response url="."><parameter name="deviceId"/></default-response></transition>
+    <transition name="deleteContent"><service-call name="delete#moqui.device.DeviceContent"/><default-response url="."><parameter name="deviceId"/></default-response></transition>
+    <transition name="transferContent">
+        <parameter name="deviceContentId" required="true"/>
+        <parameter name="requestName" required="true"/>
+        <actions>
+            <service-call name="moqui.device.DeviceGatewayServices.transfer#DeviceContent"
+                    in-map="[deviceContentId:deviceContentId, requestName:requestName]"/>
+        </actions>
+        <default-response url="."><parameter name="deviceId"/></default-response>
+    </transition>
+    <transition name="downloadContent" read-only="true">
+        <parameter name="deviceContentId"/>
+        <actions>
+            <entity-find-one entity-name="moqui.device.DeviceContent" value-field="deviceContent"/>
+            <script>ec.web.sendResourceResponse(deviceContent?.contentLocation)</script>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+
+    <actions>
+        <entity-find-one entity-name="moqui.device.DeviceDetail" value-field="device"/>
+        <if condition="device == null"><return error="true" message="Device not found with ID ${deviceId}"/></if>
+        <if condition="device.deviceRuleSetId">
+            <entity-find-one entity-name="moqui.device.DeviceRuleSet" value-field="currentDeviceRuleSet">
+                <field-map field-name="deviceRuleSetId" from="device.deviceRuleSetId"/>
+            </entity-find-one>
+        </if>
+        <if condition="device.deviceRuleId">
+            <entity-find-one entity-name="moqui.device.DeviceRule" value-field="currentDeviceRule">
+                <field-map field-name="deviceRuleId" from="device.deviceRuleId"/>
+            </entity-find-one>
+        </if>
+
+        <set field="statusFlowId" from="device.statusFlowId"/>
+        <set field="statusTypeId" from="device.statusTypeId"/>
+        <set field="statusId" from="device.statusId"/>
+        <set field="changedEntityName" value="moqui.device.Device"/>
+        <set field="pkPrimaryValue" from="deviceId"/>
+
+        <entity-find entity-name="moqui.device.DeviceDashboard" list="deviceDashboardList">
+            <econdition field-name="deviceId"/>
+            <econdition field-name="purposeEnumId" value="DdpSummary"/>
+            <order-by field-name="sequenceNum"/>
+        </entity-find>
+        <set field="dashboardPath" from="dashboardPath ?: deviceDashboardList?.getAt(0)?.dashboardPath"/>
+        <set field="dashboardId" from="dashboardPath ? null : deviceDashboardList?.getAt(0)?.dashboardId"/>
+        <set field="dashboardTitle" from="device.deviceName ?: deviceId"/>
+        <set field="style" from="'display:block; width:100%; min-height:900px; border:none; overflow:hidden; background:#fff;'"/>
+
+        <set field="downloadProcessRequestName" from="deviceId + '_ExportProcess'"/>
+        <set field="syncParametersRequestName" from="deviceId + '_SyncParameters'"/>
+        <entity-find-one entity-name="moqui.device.DeviceRequest" value-field="downloadProcessRequest">
+            <field-map field-name="requestName" from="downloadProcessRequestName"/>
+        </entity-find-one>
+        <entity-find-one entity-name="moqui.device.DeviceRequest" value-field="syncParametersRequest">
+            <field-map field-name="requestName" from="syncParametersRequestName"/>
+        </entity-find-one>
+        <set field="transferContentRequestName" from="deviceId + '_TransferContent'"/>
+        <entity-find-one entity-name="moqui.device.DeviceRequest" value-field="transferContentRequest">
+            <field-map field-name="requestName" from="transferContentRequestName"/>
+        </entity-find-one>
+    </actions>
+    <widgets>
+        <container-row><row-col md="6">
+            <label text="Device: ${device.deviceName ?: deviceId} [${deviceId}]" type="h4"/>
+
+            <form-single name="DeviceOverviewForm" map="device" skip-form="true">
+                <field name="description"><default-field title="Description"><display/></default-field></field>
+                <field name="deviceRuleSetSummary"><default-field title="Process">
+                    <link url="//${appRoot}/Device/DeviceRuleSet/EditDeviceRuleSet"
+                            text="${currentDeviceRuleSet?.ruleSetName ?: device.deviceRuleSetId} [${device.deviceRuleSetId}]"
+                            link-type="anchor" condition="device.deviceRuleSetId">
+                        <parameter name="deviceRuleSetId" from="device.deviceRuleSetId"/>
+                        <parameter name="deviceId" from="device.deviceId"/>
+                    </link>
+                </default-field></field>
+                <field name="deviceRuleSummary"><default-field title="Task">
+                    <link url="//${appRoot}/Device/DeviceRuleSet/EditDeviceRules"
+                            text="${currentDeviceRule?.ruleName ?: device.deviceRuleId} [${device.deviceRuleId}]"
+                            link-type="anchor" condition="device.deviceRuleId">
+                        <parameter name="deviceRuleSetId" from="device.deviceRuleSetId"/>
+                        <parameter name="deviceId" from="device.deviceId"/>
+                        <parameter name="selectedDeviceRuleId" from="device.deviceRuleId"/>
+                        <parameter name="selectedDeviceConfigId" from="currentDeviceRule?.deviceConfigId"/>
+                    </link>
+                </default-field></field>
+                <field name="statusFlowId"><default-field title="Status Flow">
+                    <display-entity entity-name="moqui.basic.StatusFlow" text="${description ?: statusFlowId}"/>
+                </default-field></field>
+                <field name="statusId"><default-field title="Status">
+                    <display-entity entity-name="moqui.basic.StatusItem" text="${description ?: statusId}"/>
+                </default-field></field>
+
+                <field-layout>
+                    <field-row><field-ref name="deviceRuleSetSummary"/><field-ref name="deviceRuleSummary"/></field-row>
+                    <field-row><field-ref name="statusFlowId"/><field-ref name="statusId"/></field-row>
+                    <field-ref name="description"/>
+                </field-layout>
+            </form-single>
+        </row-col><row-col md="6">
+            <container style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end; margin-bottom:12px;">
+                <section name="DownloadProcessSection"><condition><expression>downloadProcessRequest != null</expression></condition><widgets>
+                    <link url="downloadProcess" url-type="transition" link-type="hidden-form" text="Download Process">
+                        <parameter name="deviceId"/>
+                        <parameter name="deviceRuleSetId" from="device.deviceRuleSetId"/>
+                        <parameter name="requestName" from="downloadProcessRequestName"/>
+                    </link>
+                </widgets></section>
+                <section name="SyncParametersSection"><condition><expression>syncParametersRequest != null</expression></condition><widgets>
+                    <link url="syncParameters" url-type="transition" link-type="hidden-form" text="Sync Parameters">
+                        <parameter name="deviceId"/>
+                        <parameter name="requestName" from="syncParametersRequestName"/>
+                    </link>
+                </widgets></section>
+                <container-dialog id="ApplyDeviceRuleDialog" button-text="Apply Process/Task">
+                    <form-single name="ApplyDeviceRuleForm" transition="applyDeviceRule">
+                        <field name="deviceId"><default-field><hidden/></default-field></field>
+                        <field name="selectedDeviceRuleSetId"><default-field title="Process">
+                            <drop-down>
+                                <dynamic-options transition="getDeviceRuleSetList" value-field="value" label-field="label"
+                                        server-search="true" min-length="0"/>
+                            </drop-down>
+                        </default-field></field>
+                        <field name="selectedDeviceRuleId"><default-field title="Task">
+                            <drop-down>
+                                <dynamic-options transition="getDeviceRuleList" value-field="value" label-field="label"
+                                        server-search="true" min-length="0" depends-optional="true">
+                                    <depends-on field="selectedDeviceRuleSetId"/>
+                                </dynamic-options>
+                            </drop-down>
+                        </default-field></field>
+                        <field name="submitButton"><default-field title="Apply"><submit/></default-field></field>
+                    </form-single>
+                </container-dialog>
+            </container>
+            <section name="ContentSection"><actions>
+                <entity-find entity-name="moqui.device.DeviceContent" list="contentList">
+                    <econdition field-name="deviceId"/>
+                    <order-by field-name="-contentDate"/>
+                </entity-find>
+            </actions><widgets>
+                <container-box initial="closed"><box-header title="Device Content"/><box-toolbar>
+                    <container-dialog id="NewContentDialog" button-text="Add Content">
+                        <form-single name="NewContentForm" transition="createContent">
+                            <field name="deviceId"><default-field><hidden/></default-field></field>
+                            <field name="contentTypeEnumId"><default-field title="Content Type">
+                                <widget-template-include location="component://webroot/template/screen/BasicWidgetTemplates.xml#enumDropDown">
+                                    <set field="enumTypeId" value="DeviceContentType"/><set field="allowEmpty" value="true"/></widget-template-include>
+                            </default-field></field>
+                            <field name="contentFile"><default-field><file/></default-field></field>
+                            <field name="description"><default-field><text-line size="60"/></default-field></field>
+                            <field name="submitButton"><default-field title="Add"><submit/></default-field></field>
+                        </form-single>
+                    </container-dialog>
+                </box-toolbar><box-body>
+                    <section-iterate name="ContentIterateSection" list="contentList" entry="content"><actions>
+                        <entity-find-one entity-name="mantle.party.PersonWithUserAccount" value-field="paua">
+                            <field-map field-name="userId" from="content.userId"/>
+                        </entity-find-one>
+                        <entity-find-one entity-name="moqui.basic.Enumeration" value-field="contentTypeEnum">
+                            <field-map field-name="enumId" from="content.contentTypeEnumId"/>
+                        </entity-find-one>
+                    </actions><widgets>
+                        <container>
+                            <container><label text="${contentTypeEnum?.description ?: 'No Type'}" type="strong"/></container>
+                            <link url="downloadContent" condition="content.contentLocation"
+                                    parameter-map="[deviceContentId:content.deviceContentId]"
+                                    text="Download ${content.contentLocation.substring(content.contentLocation.lastIndexOf('/') + 1)}"/>
+                            <link text="Transfer Content" url="transferContent" condition="transferContentRequest != null"
+                                    parameter-map="[deviceContentId:content.deviceContentId, deviceId:deviceId, requestName:transferContentRequestName]"
+                                    confirmation="Transfer content ${contentTypeEnum?.description ?: content.deviceContentId}?"/>
+                            <container-dialog id="UpdateContentContainer${content_index}" button-text="Edit Content">
+                                <form-single name="UpdateContentForm" transition="updateContent" map="content">
+                                    <field name="deviceContentId"><default-field><hidden/></default-field></field>
+                                    <field name="deviceId"><default-field><hidden/></default-field></field>
+                                    <field name="contentTypeEnumId"><default-field title="Content Type">
+                                        <widget-template-include location="component://webroot/template/screen/BasicWidgetTemplates.xml#enumDropDown">
+                                            <set field="enumTypeId" value="DeviceContentType"/><set field="allowEmpty" value="true"/></widget-template-include>
+                                    </default-field></field>
+                                    <field name="contentFile"><default-field><file/></default-field></field>
+                                    <field name="description"><default-field><text-line size="60"/></default-field></field>
+                                    <field name="submitButton"><default-field title="Update"><submit/></default-field></field>
+                                </form-single>
+                            </container-dialog>
+                            <link text="Delete" url="deleteContent"
+                                    parameter-map="[deviceContentId:content.deviceContentId]"
+                                    confirmation="Delete content ${contentTypeEnum?.description ?: content.deviceContentId}?"/>
+                            <container><label condition="paua" text="By ${ec.resource.expand('UsernameTemplate','',paua+[userId:content.userId])} at ${ec.l10n.format(content.contentDate, 'yyyy-MM-dd HH:mm')}"/></container>
+                            <label text="${content.description ?: 'No Description'}" type="p"/>
+                        </container>
+                    </widgets></section-iterate>
+                </box-body></container-box>
+            </widgets></section>
+        </row-col></container-row>
+
+        <section name="DashboardByPathSection">
+            <condition><expression>dashboardPath</expression></condition>
+            <widgets>
+                <include-screen location="component://webroot/template/screen/BasicDashboard.xml" share-scope="true"/>
+            </widgets>
+        </section>
+        <section name="DashboardByIdUnavailableSection">
+            <condition><expression>!dashboardPath &amp;&amp; dashboardId</expression></condition>
+            <widgets>
+                <render-mode><text type="html" template="true"><![CDATA[
+                    <div class="alert alert-warning" role="alert">
+                        Device dashboard mapping found for <strong>${dashboardId?html}</strong>, but this runtime has no active dashboard registry entity.
+                        Pass <code>dashboardPath</code> to embed Grafana directly.
+                    </div>
+                ]]></text></render-mode>
+            </widgets>
+        </section>
+        <section name="DashboardMissingSection">
+            <condition><expression>!dashboardPath &amp;&amp; !dashboardId</expression></condition>
+            <widgets>
+                <render-mode><text type="html" template="true"><![CDATA[
+                    <div class="alert alert-warning" role="alert">
+                        No dashboard associated with the device <strong>${(device.deviceName ?: deviceId)?html}</strong>.
+                    </div>
+                ]]></text></render-mode>
+            </widgets>
+        </section>
+
+    </widgets>
+</screen>

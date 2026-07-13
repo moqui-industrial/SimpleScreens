@@ -320,6 +320,8 @@ along with this software (see the LICENSE.md file). If not, see
 
     <artifactGroups artifactGroupId="SimpleScreensCustomer" description="SS Customer">
         <artifacts artifactName="component://SimpleScreens/screen/SimpleScreens/Customer.xml" artifactTypeEnumId="AT_XML_SCREEN" inheritAuthz="Y"/></artifactGroups>
+    <artifactGroups artifactGroupId="SimpleScreensDevice" description="SS Device">
+        <artifacts artifactName="component://SimpleScreens/screen/SimpleScreens/Device.xml" artifactTypeEnumId="AT_XML_SCREEN" inheritAuthz="Y"/></artifactGroups>
     <artifactGroups artifactGroupId="SimpleScreensFacility" description="SS Facility">
         <artifacts artifactName="component://SimpleScreens/screen/SimpleScreens/Facility.xml" artifactTypeEnumId="AT_XML_SCREEN" inheritAuthz="Y"/></artifactGroups>
     <artifactGroups artifactGroupId="SimpleScreensGateway" description="SS Gateway">

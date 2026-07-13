@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-include="false">
+
+    <transition name="findDeviceGroup"><default-response url="."/></transition>
+    <transition name="editDeviceGroup"><default-response url="../EditDeviceGroup"/></transition>
+
+    <widgets>
+        <form-list name="ListDeviceGroups" list="deviceGroupList" skip-form="true" header-dialog="true"
+                saved-finds="true" select-columns="true" show-page-size="true">
+            <entity-find entity-name="moqui.device.DeviceDetail" list="deviceGroupList" distinct="true">
+                <date-filter/>
+                <econdition field-name="groupName" operator="is-not-null"/>
+                <search-form-inputs default-order-by="groupName,deviceId"/>
+            </entity-find>
+
+            <field name="deviceId">
+                <header-field title="ID" show-order-by="true"><text-find size="16" default-operator="begins"/></header-field>
+                <default-field><link url="editDeviceGroup" text="${deviceId}" parameter-map="[deviceId:deviceId]" link-type="anchor"/></default-field>
+            </field>
+            <field name="groupName">
+                <header-field title="Group Name" show-order-by="case-insensitive"><text-find size="30"/></header-field>
+                <default-field><link url="editDeviceGroup" text="${groupName ?: deviceId}" parameter-map="[deviceId:deviceId]" link-type="anchor"/></default-field>
+            </field>
+            <field name="parentDeviceId">
+                <header-field title="Parent" show-order-by="true"><text-find size="16" default-operator="begins"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="deviceTypeEnumId">
+                <header-field title="Type" show-order-by="true">
+                    <widget-template-include location="component://webroot/template/screen/BasicWidgetTemplates.xml#enumDropDown">
+                        <set field="enumTypeId" value="DeviceType"/>
+                        <set field="allowEmpty" value="true"/>
+                        <set field="allowMultiple" value="true"/>
+                        <set field="style" value=" "/>
+                    </widget-template-include>
+                </header-field>
+                <default-field><display-entity entity-name="moqui.basic.Enumeration"/></default-field>
+            </field>
+            <field name="purposeEnumId">
+                <header-field title="Purpose" show-order-by="true">
+                    <widget-template-include location="component://webroot/template/screen/BasicWidgetTemplates.xml#enumDropDown">
+                        <set field="enumTypeId" value="DevicePurpose"/>
+                        <set field="allowEmpty" value="true"/>
+                        <set field="allowMultiple" value="true"/>
+                        <set field="style" value=" "/>
+                    </widget-template-include>
+                </header-field>
+                <default-field><display-entity entity-name="moqui.basic.Enumeration"/></default-field>
+            </field>
+            <field name="controlMethodEnumId">
+                <header-field title="Control Method" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><display-entity entity-name="moqui.basic.Enumeration"/></default-field>
+            </field>
+            <field name="operatingModeEnumId">
+                <header-field title="Operating Mode" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><display-entity entity-name="moqui.basic.Enumeration"/></default-field>
+            </field>
+            <field name="statusTypeId">
+                <header-field title="Status Type" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><display-entity entity-name="moqui.basic.StatusType"/></default-field>
+            </field>
+            <field name="statusFlowId">
+                <header-field title="Status Flow" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><display-entity entity-name="moqui.basic.StatusFlow"/></default-field>
+            </field>
+            <field name="statusId">
+                <header-field title="Status" show-order-by="true"><text-find size="16" default-operator="begins"/></header-field>
+                <default-field><display-entity entity-name="moqui.basic.StatusItem"/></default-field>
+            </field>
+            <field name="deviceRuleSetId">
+                <header-field title="Process ID" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="deviceRuleSetDisplay" from="deviceRuleSetId">
+                <header-field title="Process"><display/></header-field>
+                <default-field title="Process">
+                    <display-entity entity-name="moqui.device.DeviceRuleSet" text="${ruleSetName ?: deviceRuleSetId}"/>
+                </default-field>
+            </field>
+            <field name="configId">
+                <header-field title="Config" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="coordinateSystemId">
+                <header-field title="Coord System" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="transformationId">
+                <header-field title="Transformation" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="approximatedFunctionId">
+                <header-field title="Trajectory" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="serialNumber">
+                <header-field title="Serial Number" show-order-by="case-insensitive"><text-find size="24"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="uuid">
+                <header-field title="UUID" show-order-by="case-insensitive"><text-find size="24"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="hash">
+                <header-field title="Hash" show-order-by="case-insensitive"><text-find size="24"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="fromDate">
+                <header-field title="From Date" show-order-by="true"><date-period allow-empty="true"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="thruDate">
+                <header-field title="Thru Date" show-order-by="true"><date-period allow-empty="true"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="geoPointId">
+                <header-field title="Geo Point" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="vendorName">
+                <header-field title="Vendor" show-order-by="case-insensitive"><text-find size="24"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="modelName">
+                <header-field title="Model" show-order-by="case-insensitive"><text-find size="24"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="version">
+                <header-field title="Version" show-order-by="case-insensitive"><text-find size="12"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="hardwareVersion">
+                <header-field title="HW Version" show-order-by="case-insensitive"><text-find size="12"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="firmwareVersion">
+                <header-field title="FW Version" show-order-by="case-insensitive"><text-find size="12"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="operatingSystem">
+                <header-field title="OS" show-order-by="case-insensitive"><text-find size="18"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="softwareApplication">
+                <header-field title="Application" show-order-by="case-insensitive"><text-find size="18"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="cycleTime">
+                <header-field title="Cycle Time" show-order-by="true"><range-find/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="isMulticore">
+                <header-field title="Multicore" show-order-by="true"><radio><option key="Y"/><option key="N"/></radio></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="location">
+                <header-field title="Location" show-order-by="case-insensitive"><text-find size="24"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="description">
+                <header-field title="Description"><text-find size="30"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="submitButton"><header-field title="Find"><submit/></header-field></field>
+
+            <form-list-column><field-ref name="deviceId"/><field-ref name="groupName"/><field-ref name="parentDeviceId"/></form-list-column>
+            <form-list-column><field-ref name="deviceTypeEnumId"/><field-ref name="purposeEnumId"/></form-list-column>
+            <form-list-column><field-ref name="controlMethodEnumId"/><field-ref name="operatingModeEnumId"/></form-list-column>
+            <form-list-column><field-ref name="statusTypeId"/><field-ref name="statusFlowId"/><field-ref name="statusId"/></form-list-column>
+            <form-list-column><field-ref name="deviceRuleSetId"/><field-ref name="deviceRuleSetDisplay"/></form-list-column>
+            <form-list-column><field-ref name="configId"/><field-ref name="coordinateSystemId"/></form-list-column>
+            <form-list-column><field-ref name="transformationId"/><field-ref name="approximatedFunctionId"/></form-list-column>
+            <form-list-column><field-ref name="serialNumber"/><field-ref name="uuid"/><field-ref name="hash"/></form-list-column>
+            <form-list-column><field-ref name="fromDate"/><field-ref name="thruDate"/><field-ref name="geoPointId"/></form-list-column>
+            <form-list-column><field-ref name="vendorName"/><field-ref name="modelName"/><field-ref name="version"/></form-list-column>
+            <form-list-column><field-ref name="hardwareVersion"/><field-ref name="firmwareVersion"/></form-list-column>
+            <form-list-column><field-ref name="operatingSystem"/><field-ref name="softwareApplication"/><field-ref name="cycleTime"/></form-list-column>
+            <form-list-column><field-ref name="isMulticore"/><field-ref name="location"/></form-list-column>
+            <form-list-column><field-ref name="description"/></form-list-column>
+        </form-list>
+    </widgets>
+</screen>

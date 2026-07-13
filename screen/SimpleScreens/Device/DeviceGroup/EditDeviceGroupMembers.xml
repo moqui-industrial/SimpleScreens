@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Members" default-menu-index="2">
+
+    <parameter name="deviceId" required="true"/>
+
+    <actions>
+        <entity-find-one entity-name="moqui.device.DeviceGroup" value-field="deviceGroup">
+            <field-map field-name="deviceId" from="deviceId"/>
+        </entity-find-one>
+        <if condition="deviceGroup == null"><return error="true" message="Device group not found with ID ${deviceId}"/></if>
+    </actions>
+    <widgets>
+        <form-list name="DeviceGroupMemberListForm" list="deviceGroupMemberList" skip-form="true"
+                header-dialog="true" saved-finds="true" select-columns="true" show-page-size="true"
+                show-csv-button="true" show-pdf-button="true" show-all-button="true">
+            <entity-find entity-name="moqui.device.DeviceGroupMember" list="deviceGroupMemberList">
+                <econdition field-name="deviceId"/>
+                <search-form-inputs default-order-by="sequenceNum,memberDeviceId"/>
+            </entity-find>
+
+            <field name="memberDeviceId">
+                <header-field title="Member Device" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field title="Member Device"><link url="//${appRoot}/Device/Device/EditDevice" text="${memberDeviceId}" parameter-map="[deviceId:memberDeviceId]" link-type="anchor"/></default-field>
+            </field>
+            <field name="purposeEnumId">
+                <header-field title="Purpose" show-order-by="true">
+                    <widget-template-include location="component://webroot/template/screen/BasicWidgetTemplates.xml#enumDropDown">
+                        <set field="enumTypeId" value="DeviceGroupMemberPurpose"/>
+                        <set field="allowEmpty" value="true"/>
+                    </widget-template-include>
+                </header-field>
+                <default-field title="Purpose"><display-entity entity-name="moqui.basic.Enumeration"/></default-field>
+            </field>
+            <field name="sequenceNum">
+                <header-field title="Sequence" show-order-by="true"><range-find/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="statusId">
+                <header-field title="Status" show-order-by="true"><text-find size="16" default-operator="begins"/></header-field>
+                <default-field title="Status"><display-entity entity-name="moqui.basic.StatusItem"/></default-field>
+            </field>
+            <field name="statusFlowId">
+                <header-field title="Status Flow" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field title="Status Flow"><display-entity entity-name="moqui.basic.StatusFlow"/></default-field>
+            </field>
+            <field name="description">
+                <header-field title="Description" show-order-by="case-insensitive"><text-find size="30"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="submit">
+                <header-field title="Find"><submit/></header-field>
+            </field>
+        </form-list>
+    </widgets>
+</screen>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Observability" default-menu-index="3">
+
+    <parameter name="deviceId" required="true"/>
+    <parameter name="dashboardPath"/>
+    <parameter name="dashboardType"/>
+
+    <actions>
+        <entity-find-one entity-name="moqui.device.DeviceDetail" value-field="device"/>
+        <if condition="device == null"><return error="true" message="Device not found with ID ${deviceId}"/></if>
+
+        <entity-find entity-name="moqui.device.DeviceDashboard" list="deviceDashboardList">
+            <econdition field-name="deviceId"/>
+            <econdition field-name="purposeEnumId" value="DdpMetrics"/>
+            <order-by field-name="sequenceNum"/>
+        </entity-find>
+        <if condition="!deviceDashboardList">
+            <entity-find entity-name="moqui.device.DeviceDashboard" list="deviceDashboardList">
+                <econdition field-name="deviceId"/>
+                <econdition field-name="purposeEnumId" value="DdpSummary"/>
+                <order-by field-name="sequenceNum"/>
+            </entity-find>
+        </if>
+
+        <set field="dashboardPath" from="dashboardPath ?: deviceDashboardList?.getAt(0)?.dashboardPath"/>
+        <set field="dashboardId" from="dashboardPath ? null : deviceDashboardList?.getAt(0)?.dashboardId"/>
+        <set field="dashboardTitle" from="device.deviceName ?: deviceId"/>
+        <set field="style" from="'display:block; width:100%; min-height:1400px; border:none; overflow:hidden; background:#fff;'"/>
+    </actions>
+    <widgets>
+        <section name="DashboardByPathSection">
+            <condition><expression>dashboardPath</expression></condition>
+            <widgets>
+                <include-screen location="component://webroot/template/screen/BasicDashboard.xml" share-scope="true"/>
+            </widgets>
+        </section>
+        <section name="DashboardByIdUnavailableSection">
+            <condition><expression>!dashboardPath &amp;&amp; dashboardId</expression></condition>
+            <widgets>
+                <render-mode><text type="html" template="true"><![CDATA[
+                    <div class="alert alert-warning" role="alert">
+                        Device dashboard mapping found for <strong>${dashboardId?html}</strong>, but this runtime has no active dashboard registry entity.
+                        Pass <code>dashboardPath</code> to embed Grafana directly.
+                    </div>
+                ]]></text></render-mode>
+            </widgets>
+        </section>
+        <section name="DashboardMissingSection">
+            <condition><expression>!dashboardPath &amp;&amp; !dashboardId</expression></condition>
+            <widgets>
+                <render-mode><text type="html" template="true"><![CDATA[
+                    <div class="alert alert-warning" role="alert">
+                        No dashboard associated with the device <strong>${(device.deviceName ?: deviceId)?html}</strong>.
+                    </div>
+                ]]></text></render-mode>
+            </widgets>
+        </section>
+    </widgets>
+</screen>

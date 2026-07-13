@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+-->
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Parameters" default-menu-index="3">
+
+    <parameter name="deviceId" required="true"/>
+
+    <transition name="updateParameter">
+        <service-call name="update#moqui.math.Parameter"/>
+        <default-response url="."/>
+    </transition>
+
+    <actions>
+        <entity-find-one entity-name="moqui.device.DeviceDetail" value-field="deviceGroup"/>
+        <if condition="deviceGroup == null"><return error="true" message="Device group not found with ID ${deviceId}"/></if>
+    </actions>
+    <widgets>
+        <form-list name="DeviceGroupParameterList" list="parameterList" transition="updateParameter" header-dialog="true"
+                saved-finds="true" select-columns="true" show-page-size="true"
+                show-csv-button="true" show-pdf-button="true" show-all-button="true">
+            <entity-find entity-name="moqui.math.ParameterDetail" list="parameterList" cache="true">
+                <econdition field-name="deviceId"/>
+                <search-form-inputs default-order-by="sequenceNum,parameterCode,parameterId"/>
+            </entity-find>
+
+            <field name="parameterId"><default-field><hidden/></default-field></field>
+            <field name="deviceId"><default-field><hidden/></default-field></field>
+            <field name="deviceConfigId"><default-field><hidden/></default-field></field>
+
+            <field name="parameterDefId">
+                <header-field title="Parameter Def" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="parentParameterDefId">
+                <header-field title="Parent Def" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="parameterIdDisplay">
+                <header-field title="Parameter ID"><display/></header-field>
+                <default-field title="Parameter ID"><display text="${parameterId}"/></default-field>
+            </field>
+            <field name="parameterCode">
+                <header-field title="Code" show-order-by="case-insensitive"><text-find size="20" default-operator="begins"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="parameterName">
+                <header-field title="Name" show-order-by="case-insensitive"><text-find size="30" default-operator="contains"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="parameterAlias">
+                <header-field title="Alias" show-order-by="case-insensitive"><text-find size="20" default-operator="contains"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="description">
+                <header-field title="Description"><text-find size="30" default-operator="contains"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="externalId">
+                <header-field title="External ID" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="userId">
+                <header-field title="User" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="parameterTypeEnumId">
+                <header-field title="Type" show-order-by="true">
+                    <widget-template-include location="component://webroot/template/screen/BasicWidgetTemplates.xml#enumDropDown">
+                        <set field="enumTypeId" value="ParameterType"/>
+                        <set field="allowEmpty" value="true"/>
+                        <set field="allowMultiple" value="true"/>
+                        <set field="style" value=" "/>
+                    </widget-template-include>
+                </header-field>
+                <default-field><display-entity entity-name="moqui.basic.Enumeration"/></default-field>
+            </field>
+            <field name="purposeEnumId">
+                <header-field title="Purpose" show-order-by="true">
+                    <widget-template-include location="component://webroot/template/screen/BasicWidgetTemplates.xml#enumDropDown">
+                        <set field="enumTypeId" value="ParameterPurpose"/>
+                        <set field="allowEmpty" value="true"/>
+                        <set field="allowMultiple" value="true"/>
+                        <set field="style" value=" "/>
+                    </widget-template-include>
+                </header-field>
+                <default-field><display-entity entity-name="moqui.basic.Enumeration"/></default-field>
+            </field>
+            <field name="groupEnumId">
+                <header-field title="Group" show-order-by="true">
+                    <widget-template-include location="component://webroot/template/screen/BasicWidgetTemplates.xml#enumDropDown">
+                        <set field="enumTypeId" value="ParameterGroup"/>
+                        <set field="allowEmpty" value="true"/>
+                        <set field="allowMultiple" value="true"/>
+                        <set field="style" value=" "/>
+                    </widget-template-include>
+                </header-field>
+                <default-field><display-entity entity-name="moqui.basic.Enumeration"/></default-field>
+            </field>
+            <field name="classEnumId">
+                <header-field title="Class" show-order-by="true">
+                    <widget-template-include location="component://webroot/template/screen/BasicWidgetTemplates.xml#enumDropDown">
+                        <set field="enumTypeId" value="ParameterClass"/>
+                        <set field="allowEmpty" value="true"/>
+                        <set field="allowMultiple" value="true"/>
+                        <set field="style" value=" "/>
+                    </widget-template-include>
+                </header-field>
+                <default-field><display-entity entity-name="moqui.basic.Enumeration"/></default-field>
+            </field>
+            <field name="permissionEnumId">
+                <header-field title="Permission" show-order-by="true">
+                    <widget-template-include location="component://webroot/template/screen/BasicWidgetTemplates.xml#enumDropDown">
+                        <set field="enumTypeId" value="ParameterPermission"/>
+                        <set field="allowEmpty" value="true"/>
+                        <set field="allowMultiple" value="true"/>
+                        <set field="style" value=" "/>
+                    </widget-template-include>
+                </header-field>
+                <default-field><display-entity entity-name="moqui.basic.Enumeration"/></default-field>
+            </field>
+            <field name="uomTypeEnumId">
+                <header-field title="UOM Type" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><display-entity entity-name="moqui.basic.Enumeration"/></default-field>
+            </field>
+            <field name="isRequired">
+                <header-field title="Required" show-order-by="true"><radio><option key="Y"/><option key="N"/></radio></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="hasValue">
+                <header-field title="Has Value" show-order-by="true"><radio><option key="Y"/><option key="N"/></radio></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="priority">
+                <header-field title="Priority" show-order-by="true"><range-find/></header-field>
+                <default-field><display/></default-field>
+            </field>
+            <field name="sequenceNum">
+                <header-field title="Sequence" show-order-by="true"><range-find/></header-field>
+                <default-field><text-line size="6"/></default-field>
+            </field>
+            <field name="minValue">
+                <header-field title="Min" show-order-by="true"><range-find/></header-field>
+                <default-field><display format="0.########"/></default-field>
+            </field>
+            <field name="maxValue">
+                <header-field title="Max" show-order-by="true"><range-find/></header-field>
+                <default-field><display format="0.########"/></default-field>
+            </field>
+            <field name="defaultValue">
+                <header-field title="Default" show-order-by="true"><range-find/></header-field>
+                <default-field><display format="0.########"/></default-field>
+            </field>
+            <field name="numericValue">
+                <header-field title="Numeric" show-order-by="true"><range-find/></header-field>
+                <default-field><text-line size="14"/></default-field>
+            </field>
+            <field name="symbolicValue">
+                <header-field title="Symbolic" show-order-by="case-insensitive"><text-find size="18" default-operator="contains"/></header-field>
+                <default-field><text-line size="24"/></default-field>
+            </field>
+            <field name="parameterEnumId">
+                <header-field title="Enum Value" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><text-line size="24"/></default-field>
+            </field>
+            <field name="parameterUomId">
+                <header-field title="UOM" show-order-by="true"><text-find size="18" default-operator="begins"/></header-field>
+                <default-field><display-entity entity-name="moqui.basic.Uom" text="${description?:parameterUomId}"/></default-field>
+            </field>
+            <field name="submitButton">
+                <header-field title="Find"><submit/></header-field>
+                <default-field title="Update"><submit/></default-field>
+            </field>
+
+            <form-list-column><field-ref name="parameterDefId"/><field-ref name="parentParameterDefId"/></form-list-column>
+            <form-list-column><field-ref name="parameterIdDisplay"/><field-ref name="parameterCode"/><field-ref name="parameterName"/></form-list-column>
+            <form-list-column><field-ref name="parameterAlias"/><field-ref name="description"/></form-list-column>
+            <form-list-column><field-ref name="parameterTypeEnumId"/><field-ref name="purposeEnumId"/></form-list-column>
+            <form-list-column><field-ref name="groupEnumId"/><field-ref name="classEnumId"/><field-ref name="permissionEnumId"/></form-list-column>
+            <form-list-column><field-ref name="uomTypeEnumId"/><field-ref name="parameterUomId"/></form-list-column>
+            <form-list-column><field-ref name="isRequired"/><field-ref name="hasValue"/><field-ref name="priority"/><field-ref name="sequenceNum"/></form-list-column>
+            <form-list-column><field-ref name="minValue"/><field-ref name="maxValue"/><field-ref name="defaultValue"/></form-list-column>
+            <form-list-column><field-ref name="numericValue"/><field-ref name="symbolicValue"/><field-ref name="parameterEnumId"/></form-list-column>
+            <form-list-column><field-ref name="externalId"/><field-ref name="userId"/></form-list-column>
+            <form-list-column><field-ref name="submitButton"/></form-list-column>
+        </form-list>
+    </widgets>
+</screen>
