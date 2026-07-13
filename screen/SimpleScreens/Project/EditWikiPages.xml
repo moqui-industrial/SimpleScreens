@@ -68,10 +68,10 @@ along with this software (see the LICENSE.md file). If not, see
             <field name="rootWorkEffortId" from="projectWorkEffortId"><default-field><hidden/></default-field></field>
             <field name="wikiPageId"><default-field><hidden/></default-field></field>
 
-            <field name="wikiSpaceId"><default-field title="Space"><display text=""/>
+            <field name="wikiSpaceId"><default-field title="Space">
                 <link text="${wikiSpaceId}" url="//${appRoot}/Wiki/wiki/${wikiSpaceId}"/>
             </default-field></field>
-            <field name="pagePath"><default-field title="Page"><display text=""/>
+            <field name="pagePath"><default-field title="Page">
                 <link text="${pagePath}" url="//${appRoot}/Wiki/wiki/${wikiSpaceId}/${pagePath?:''}"/>
             </default-field></field>
 
