@@ -39,7 +39,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <search-form-inputs default-order-by="pseudoId" paginate="false"/>
                 <!-- NOTE: this query will get slower over time, not a good approach for large inventory histories but only way to
                     get valuation at any point in time unless we calculate and save interim values -->
-                <econdition field-name="effectiveDate" operator="less-equals" from="thruDate"/>
+                <econdition field-name="effectiveDate" operator="less-equals" from="thruDate" ignore-if-empty="true"/>
                 <econdition field-name="quantityOnHandDiff" operator="not-equals" from="0.0"/>
                 <having-econditions><econditions combine="or">
                     <econdition field-name="startingOnHand" operator="not-equals" from="0.0"/>
@@ -56,8 +56,8 @@ along with this software (see the LICENSE.md file). If not, see
                         <econdition field-name="productId" from="orig.productId"/>
                         <econdition field-name="facilityId" from="orig.facilityId"/>
                         <!-- NOTE: not showing or querying locationSeqId: <econdition field-name="locationSeqId" from="orig.locationSeqId" ignore-if-empty="true"/> -->
-                        <econdition field-name="effectiveDate" operator="greater-equals" from="fromDate"/>
-                        <econdition field-name="effectiveDate" operator="less-equals" from="thruDate"/>
+                        <econdition field-name="effectiveDate" operator="greater-equals" from="fromDate" ignore-if-empty="true"/>
+                        <econdition field-name="effectiveDate" operator="less-equals" from="thruDate" ignore-if-empty="true"/>
                         <econdition field-name="quantityOnHandDiff" operator="not-equals" from="0.0"/>
                         <select-field field-name="assetId,effectiveDate,shipmentId,issOrderId,issInvoiceId,recOrderId,recInvoiceId,quantityOnHandDiff"/>
                         <order-by field-name="effectiveDate"/>
