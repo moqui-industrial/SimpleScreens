@@ -246,22 +246,25 @@ along with this software (see the LICENSE.md file). If not, see
             <row-actions>
                 <script><![CDATA[
                 if (unpaidTotal) {
-                    Integer invoiceDateDays = invoiceDate != null ? nowTimestamp - invoiceDate : null
-                    Integer invoiceDateIdx = invoiceDateDays != null ? ((invoiceDateDays as BigDecimal) / periodDaysBd).setScale(0, BigDecimal.ROUND_DOWN).intValue() : null
+                    // The actions transition does not run screen actions, so these are unset there.
+                    def nowTs = nowTimestamp ?: ec.user.nowTimestamp
+                    def periodBd = periodDaysBd ?: new BigDecimal(periodDays ?: 30)
+                    Integer invoiceDateDays = invoiceDate != null && nowTs != null ? nowTs - invoiceDate : null
+                    Integer invoiceDateIdx = invoiceDateDays != null ? ((invoiceDateDays as BigDecimal) / periodBd).setScale(0, BigDecimal.ROUND_DOWN).intValue() : null
                     if (invoiceDateIdx != null && invoiceDateIdx > 4) invoiceDateIdx = 4
-                    Integer dueDateDays = dueDate != null ? nowTimestamp - dueDate : null
+                    Integer dueDateDays = dueDate != null && nowTs != null ? nowTs - dueDate : null
                     Integer dueDateIdx = dueDateDays != null ? (dueDateDays < 0 ? 0 :
-                            ((dueDateDays as BigDecimal) / periodDaysBd).setScale(0, BigDecimal.ROUND_DOWN).intValue() + 1) : null
+                            ((dueDateDays as BigDecimal) / periodBd).setScale(0, BigDecimal.ROUND_DOWN).intValue() + 1) : null
                     if (dueDateIdx != null && dueDateIdx > 5) dueDateIdx = 5
 
                     if (statusId in ['InvoiceInProcess','InvoiceFinalized','InvoiceSent','InvoiceAcked']) {
-                        if (invoiceDateIdx != null) receivableAgingList[invoiceDateIdx] = receivableAgingList[invoiceDateIdx] + unpaidTotal
-                        if (dueDateIdx != null) receivableDueAgingList[dueDateIdx] = receivableDueAgingList[dueDateIdx] + unpaidTotal
-                        hasReceivableAging.set(true)
+                        if (receivableAgingList != null && invoiceDateIdx != null) receivableAgingList[invoiceDateIdx] = receivableAgingList[invoiceDateIdx] + unpaidTotal
+                        if (receivableDueAgingList != null && dueDateIdx != null) receivableDueAgingList[dueDateIdx] = receivableDueAgingList[dueDateIdx] + unpaidTotal
+                        if (hasReceivableAging != null) hasReceivableAging.set(true)
                     } else if (statusId in ['InvoiceIncoming','InvoiceReceived','InvoiceApproved']) {
-                        if (invoiceDateIdx != null) payableAgingList[invoiceDateIdx] = payableAgingList[invoiceDateIdx] + unpaidTotal
-                        if (dueDateIdx != null) payableDueAgingList[dueDateIdx] = payableDueAgingList[dueDateIdx] + unpaidTotal
-                        hasPayableAging.set(true)
+                        if (payableAgingList != null && invoiceDateIdx != null) payableAgingList[invoiceDateIdx] = payableAgingList[invoiceDateIdx] + unpaidTotal
+                        if (payableDueAgingList != null && dueDateIdx != null) payableDueAgingList[dueDateIdx] = payableDueAgingList[dueDateIdx] + unpaidTotal
+                        if (hasPayableAging != null) hasPayableAging.set(true)
                     }
                 }
                 ]]></script>
